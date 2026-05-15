@@ -99,11 +99,12 @@ def generate_launch_description():
                 avia_params_file,
             ],
             # https://docs.ros.org/en/humble/How-To-Guides/Getting-Backtraces-in-ROS-2.html
-            prefix=[
-                # ("gdb -ex run --args"),
-                # ("valgrind --log-file=./valgrind_report.log --tool=memcheck --leak-check=full --show-leak-kinds=all -s --track-origins=yes --show-reachable=yes --undef-value-errors=yes --track-fds=yes")
-            ],
+            # prefix=[
+            #     ("gdb -ex run --args"),
+            #     ("valgrind --log-file=./valgrind_report.log --tool=memcheck --leak-check=full --show-leak-kinds=all -s --track-origins=yes --show-reachable=yes --undef-value-errors=yes --track-fds=yes")
+            # ],
             output="screen"
+            # prefix='xterm -e gdb -ex run --args'
         ),
 
         Node(
