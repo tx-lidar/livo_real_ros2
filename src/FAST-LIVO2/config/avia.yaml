@@ -17,6 +17,10 @@
         0.0075568,0.0143083,-0.9998690,
         0.9999649,-0.0037329,0.0075041] 
       Pcl: [0.00549469, 0.0712101,0.0322054]
+      ll_extrinsic_T: [0.04165, 0.02326, -0.0284]
+      ll_extrinsic_R: [1.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 0.0, 1.0]
 
     time_offset: 
       imu_time_offset: 0.0
@@ -81,7 +85,7 @@
       pose_output_en: false
 
     pcd_save:
-      pcd_save_en: true
+      pcd_save_en: false
       type: 0 # 0: World Frame, 1: Body Frame;
       colmap_output_en: false # need to set interval = -1
       filter_size_pcd: 0.15

@@ -121,14 +121,14 @@ public:
   Eigen::MatrixXd K, H_sub_inv;
 
   ofstream fout_camera, fout_colmap;
-  unordered_map<VOXEL_LOCATION, VOXEL_POINTS *> feat_map;
+  // unordered_map<VOXEL_LOCATION, VOXEL_POINTS *> feat_map;
 
-  // std::list<std::pair<VOXEL_LOCATION, VOXEL_POINTS *>> feat_map_cache_;
-  // std::unordered_map<
-  //     VOXEL_LOCATION,
-  //     std::list<std::pair<VOXEL_LOCATION, VOXEL_POINTS *>>::iterator>
-  //     feat_map;
-  // const size_t MAX_FEAT_VOXEL_NUM = 20000;
+  std::list<std::pair<VOXEL_LOCATION, VOXEL_POINTS *>> feat_map_cache_;
+  std::unordered_map<
+      VOXEL_LOCATION,
+      std::list<std::pair<VOXEL_LOCATION, VOXEL_POINTS *>>::iterator>
+      feat_map;
+  const size_t MAX_FEAT_VOXEL_NUM = 10000;
   unordered_map<VOXEL_LOCATION, int> sub_feat_map;
   unordered_map<int, Warp *> warp_map;
   vector<VisualPoint *> retrieve_voxel_points;

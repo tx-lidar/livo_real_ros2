@@ -197,7 +197,7 @@ public:
       VOXEL_LOCATION,
       std::list<std::pair<VOXEL_LOCATION, VoxelOctoTree *>>::iterator>
       voxel_map_;
-  const size_t MAX_VOXEL_NUM = 20000; // 可配置
+  const size_t MAX_VOXEL_NUM = 50000; // 可配置
 
   PointCloudXYZI::Ptr feats_undistort_;
   PointCloudXYZI::Ptr feats_down_body_;

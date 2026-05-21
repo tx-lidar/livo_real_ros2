@@ -23,7 +23,7 @@ VIOManager::~VIOManager() {
     delete pair.second;
   warp_map.clear();
   for (auto &pair : feat_map)
-    delete pair.second;
+    delete pair.second->second;
   feat_map.clear();
 }
 
@@ -221,6 +221,29 @@ void VIOManager::getImagePatch(cv::Mat img, V2D pc, float *patch_tmp,
   }
 }
 
+// void VIOManager::insertPointIntoVoxelMap(VisualPoint *pt_new) {
+//   V3D pt_w(pt_new->pos_[0], pt_new->pos_[1], pt_new->pos_[2]);
+//   double voxel_size = 0.5;
+//   float loc_xyz[3];
+//   for (int j = 0; j < 3; j++) {
+//     loc_xyz[j] = pt_w[j] / voxel_size;
+//     if (loc_xyz[j] < 0) {
+//       loc_xyz[j] -= 1.0;
+//     }
+//   }
+//   VOXEL_LOCATION position((int64_t)loc_xyz[0], (int64_t)loc_xyz[1],
+//                           (int64_t)loc_xyz[2]);
+//   auto iter = feat_map.find(position);
+//   if (iter != feat_map.end()) {
+//     iter->second->voxel_points.push_back(pt_new);
+//     iter->second->count++;
+//   } else {
+//     VOXEL_POINTS *ot = new VOXEL_POINTS(0);
+//     ot->voxel_points.push_back(pt_new);
+//     feat_map[position] = ot;
+//   }
+// }
+// feat_map LRU
 void VIOManager::insertPointIntoVoxelMap(VisualPoint *pt_new) {
   V3D pt_w(pt_new->pos_[0], pt_new->pos_[1], pt_new->pos_[2]);
   double voxel_size = 0.5;
@@ -235,12 +258,25 @@ void VIOManager::insertPointIntoVoxelMap(VisualPoint *pt_new) {
                           (int64_t)loc_xyz[2]);
   auto iter = feat_map.find(position);
   if (iter != feat_map.end()) {
-    iter->second->voxel_points.push_back(pt_new);
-    iter->second->count++;
+    feat_map_cache_.splice(feat_map_cache_.begin(), feat_map_cache_,
+                           iter->second);
+    VOXEL_POINTS *voxel = iter->second->second;
+    voxel->voxel_points.push_back(pt_new);
+    voxel->count++;
   } else {
     VOXEL_POINTS *ot = new VOXEL_POINTS(0);
     ot->voxel_points.push_back(pt_new);
-    feat_map[position] = ot;
+    ot->count++;
+
+    feat_map_cache_.emplace_front(position, ot);
+    feat_map[position] = feat_map_cache_.begin();
+
+    if (feat_map_cache_.size() > MAX_FEAT_VOXEL_NUM) {
+      auto old_it = std::prev(feat_map_cache_.end());
+      delete old_it->second;
+      feat_map.erase(old_it->first);
+      feat_map_cache_.pop_back();
+    }
   }
 }
 
@@ -911,7 +947,7 @@ void VIOManager::retrieveFromVisualSparseMap(
     if (corre_voxel != feat_map.end()) {
       bool voxel_in_fov = false;
       std::vector<VisualPoint *> &voxel_points =
-          corre_voxel->second->voxel_points;
+          corre_voxel->second->second->voxel_points;
       int voxel_num = voxel_points.size();
 
       for (int i = 0; i < voxel_num; i++) {
@@ -989,7 +1025,7 @@ void VIOManager::retrieveFromVisualSparseMap(
           bool voxel_in_fov = false;
 
           std::vector<VisualPoint *> &voxel_points =
-              corre_feat_map->second->voxel_points;
+              corre_feat_map->second->second->voxel_points;
           int voxel_num = voxel_points.size();
           if (voxel_num == 0)
             continue;

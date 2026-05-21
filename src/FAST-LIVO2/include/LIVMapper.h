@@ -1,14 +1,4 @@
-/*
-This file is part of FAST-LIVO2: Fast, Direct LiDAR-Inertial-Visual Odometry.
 
-Developer: Chunran Zheng <zhengcr@connect.hku.hk>
-
-For commercial use, please contact me at <zhengcr@connect.hku.hk> or
-Prof. Fu Zhang at <fuzhang@hku.hk>.
-
-This file is subject to the terms and conditions outlined in the 'LICENSE' file,
-which is included as part of this source code package.
-*/
 
 #ifndef LIV_MAPPER_H
 #define LIV_MAPPER_H
@@ -23,7 +13,11 @@ which is included as part of this source code package.
 #endif
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <image_transport/image_transport.hpp>
+#include <message_filters/subscriber.h>
+#include <message_filters/sync_policies/approximate_time.h>
+#include <message_filters/synchronizer.h>
 #include <nav_msgs/msg/path.hpp>
+// #include <pcl/filters/crop_box.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <vikit/camera_loader.h>
 
@@ -56,6 +50,14 @@ public:
   void RGBpointBodyToWorld(PointType const *const pi, PointType *const po);
   void standard_pcl_cbk(sensor_msgs::msg::PointCloud2::ConstSharedPtr msg);
   void livox_pcl_cbk(livox_ros_driver2::msg::CustomMsg::ConstSharedPtr msg_in);
+
+  void fusion_livox_cbk(
+      const livox_ros_driver2::msg::CustomMsg::ConstSharedPtr &msg1,
+      const livox_ros_driver2::msg::CustomMsg::ConstSharedPtr &msg2);
+  //点云变换融合
+  void fusion_cloud(const PointCloudXYZI::Ptr &cloud1,
+                    const PointCloudXYZI::Ptr &cloud2,
+                    PointCloudXYZI::Ptr &cloud_fused);
   void imu_cbk(sensor_msgs::msg::Imu::ConstSharedPtr msg_in);
   void img_cbk(sensor_msgs::msg::Image::ConstSharedPtr msg_in);
   void publish_img_rgb(const image_transport::Publisher &pubImage,
@@ -98,11 +100,11 @@ public:
       std::list<std::pair<VOXEL_LOCATION, VoxelOctoTree *>>::iterator>
       voxel_map;
   string root_dir;
-  string lid_topic, imu_topic, seq_name, img_topic;
-  V3D extT;
-  M3D extR;
+  string lid_topic, imu_topic, seq_name, img_topic, lid_topic_fusion;
+  V3D extT, lidar_extT;
+  M3D extR, lidar_extR;
   std::string raw_points_dir, downsampled_points_dir;
-
+  bool is_first_lidar = true;
   int feats_down_size = 0, max_iterations = 0;
 
   double res_mean_last = 0.05;
@@ -163,6 +165,8 @@ public:
   vector<double> extrinR;
   vector<double> cameraextrinT;
   vector<double> cameraextrinR;
+  vector<double> ll_extrinsic_T;
+  vector<double> ll_extrinsic_R;
   int IMG_POINT_COV;
 
   PointCloudXYZI::Ptr visual_sub_map;
@@ -173,6 +177,9 @@ public:
   PointCloudXYZI::Ptr pcl_wait_pub;
   PointCloudXYZRGB::Ptr pcl_wait_save;
   PointCloudXYZI::Ptr pcl_wait_save_intensity;
+  PointCloudXYZI::Ptr cloud1;
+  PointCloudXYZI::Ptr cloud2;
+  PointCloudXYZI::Ptr cloud_fused;
 
   ofstream fout_pre, fout_out, fout_visual_pos, fout_lidar_pos, fout_points;
 
@@ -193,6 +200,16 @@ public:
   ImuProcessPtr p_imu;
   VoxelMapManagerPtr voxelmap_manager;
   VIOManagerPtr vio_manager;
+
+  //融合点云相关
+  std::shared_ptr<
+      message_filters::Subscriber<livox_ros_driver2::msg::CustomMsg>>
+      sub_lidar_main_, sub_lidar_other_;
+  std::shared_ptr<message_filters::Synchronizer<
+      message_filters::sync_policies::ApproximateTime<
+          livox_ros_driver2::msg::CustomMsg,
+          livox_ros_driver2::msg::CustomMsg>>>
+      sync_;
 
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr plane_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr voxel_pub;

@@ -46,10 +46,13 @@ enum LID_TYPE {
   L515 = 4,
   XT32 = 5,
   PANDAR128 = 6,
-  ROBOSENSE = 7
+  ROBOSENSE = 7,
+  FUSION = 8
 };
-enum SLAM_MODE { ONLY_LO = 0, ONLY_LIO = 1, LIVO = 2 };
-enum EKF_STATE { WAIT = 0, VIO = 1, LIO = 2, LO = 3 };
+// enum SLAM_MODE { ONLY_LO = 0, ONLY_LIO = 1, LIVO = 2 };
+// enum EKF_STATE { WAIT = 0, VIO = 1, LIO = 2, LO = 3 };
+enum SLAM_MODE { ONLY_LIO = 1, LIVO = 2 };
+enum EKF_STATE { WAIT = 0, VIO = 1, LIO = 2 };
 
 struct MeasureGroup {
   double vio_time;
